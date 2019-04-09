@@ -23,21 +23,33 @@ class MarkdownHelper
      */
     private $logger;
 
-    public function __construct(AdapterInterface $cache, MarkdownInterface $markdown, LoggerInterface $logger)
+    /**
+     * @var bool
+     */
+    private $isDebug;
+
+    public function __construct(AdapterInterface $cache, MarkdownInterface $markdown, LoggerInterface $markdownLogger, bool $isDebug)
     {
         $this->cache = $cache;
         $this->markdown = $markdown;
-        $this->logger = $logger;
+        $this->logger = $markdownLogger;
+        $this->isDebug = $isDebug;
     }
 
     public function parse(string $source): string
     {
+        if (strpos($source, 'bacon')) {
+            $this->logger->info('They talk about bacon');
+        }
 
-        $this->logger->info('They talk about beacon');
+        if ($this->isDebug) {
+            return $this->markdown->transform($source);
+        }
+
         $item = $this->cache->getItem('markdown_'.md5($source));
         if (!$item->isHit()) {
             $item->set($this->markdown->transform($source));
-            $this->save($item);
+            $this->cache->save($item);
         }
 
         return $item->get();
